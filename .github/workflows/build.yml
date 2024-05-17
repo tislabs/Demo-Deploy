@@ -39,8 +39,8 @@ jobs:
      - name: Build Image
        run: | 
          docker build -t merchant_api .
-         docker tag merchant_api:latest public.ecr.aws/v6m2z7m5/merchant_api:v2
-         docker push public.ecr.aws/v6m2z7m5/merchant_api:v2
+         docker tag merchant_api:latest public.ecr.aws/v6m2z7m5/merchant_api:$GITHUB_RUN_ID
+         docker push public.ecr.aws/v6m2z7m5/merchant_api:$GITHUB_RUN_ID
 
 
   build-and-push-private-ecr:
@@ -65,7 +65,7 @@ jobs:
      - name: Build Image
        run: | 
          docker build -t merchant_api .
-         docker tag merchant_api:latest 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:v11
-         docker push 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:v11
+         docker tag merchant_api:latest 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_RUN_ID
+         docker push 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_RUN_ID
     
      
