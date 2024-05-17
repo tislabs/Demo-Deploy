@@ -36,5 +36,8 @@ jobs:
      - name: Build Image
        run: | 
          docker build -t merchant_api .
-         docker tag merchant_api:latest public.ecr.aws/v6m2z7m5/merchant_api:${BUILD_ID}
-         docker push public.ecr.aws/v6m2z7m5/merchant_api:${BUILD_ID}
+         docker tag merchant_api:latest public.ecr.aws/v6m2z7m5/merchant_api:v1
+         docker push public.ecr.aws/v6m2z7m5/merchant_api:v1
+     needs:
+         login-to-aws:
+     
