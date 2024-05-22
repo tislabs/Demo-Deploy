@@ -95,7 +95,7 @@ jobs:
         REPOSITORY_TAG: ${{ env.REGISTRY }}/${{ env.REPO }}:${{ env.GITHUB_RUN_NUMBER }}
         
       run: |
-        sed -i "s|image: REPOSITORY_TAG|image: ${{ env.REPOSITORY_TAG }}|g" ./deploy.yaml
+        sed -i "s|image: REPOSITORY_TAG|image: 765176032689.dkr.ecr.eu-west-1.amazonaws.com|g" ./deploy.yaml
         kubectl apply -f ./deploy.yaml 
 
     needs:
