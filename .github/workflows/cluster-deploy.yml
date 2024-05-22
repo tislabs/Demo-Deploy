@@ -42,8 +42,8 @@ jobs:
        run: | 
          printenv
          docker build -t merchant_api .
-         docker tag merchant_api:latest 765176032689.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_NUMBER_ID
-         docker push 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_RUN_ID
+         docker tag merchant_api:latest 765176032689.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_RUN_NUMBER
+         docker push 798470206542.dkr.ecr.eu-west-1.amazonaws.com/merchant_api:$GITHUB_RUN_NUMBER
 
          
   install_Kubectl:
