@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: test-app
-        image: {{ REPOSITORY_TAG }}
+        image: ${REPOSITORY_TAG}
         resources:
           requests:
              memory: 50Mi
