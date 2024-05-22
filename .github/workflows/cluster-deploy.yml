@@ -19,7 +19,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
         
-  buildImage-To-ECR:
+  buildImage-and-Push-to-ECR:
      runs-on: ubuntu-latest
      needs:
        loginToAWS
@@ -57,7 +57,7 @@ jobs:
         sudo mv kubectl /usr/local/bin/
 
     needs:
-      buildImage-To-ECR
+      buildImage-and-Push-to-ECR
       
 #--------------->
 
