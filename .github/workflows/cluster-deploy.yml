@@ -33,7 +33,7 @@ jobs:
        uses: docker/login-action@v3
        with:
          registry: 765176032689.dkr.ecr.eu-west-1.amazonaws.com
-         username: ${{ secrets.AWS_ACCESS_KEY }}
+         username: ${{ secrets.AWS_ACCESS_KEY_ID }}
          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
        env:
          aws-region: ${{ secrets.AWS_REGION }}
