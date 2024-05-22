@@ -34,6 +34,8 @@ jobs:
       run: |
         aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }} --kubeconfig $KUBECONFIG
         echo "KUBECONFIG=$KUBECONFIG" >> $GITHUB_ENV
+    needs:
+      loginToAWS
 
   deployToCluster:
     runs-on: ubuntu-latest
@@ -42,5 +44,8 @@ jobs:
     - name: Deploy to EKS
       run: |
         kubectl get ns 
+
+    needs:
+      configureKubectl
 
     
