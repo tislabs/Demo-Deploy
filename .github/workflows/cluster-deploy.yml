@@ -35,6 +35,11 @@ jobs:
       env:
         aws-region: ${{ secrets.AWS_REGION }}
 
+    - name: Create ECR Repository if Not Exist
+      run: |
+        aws ecr describe-repositories --repository-name nginx || \
+        aws ecr create-repository --repository-name nginx
+
     - name: Pull NGINX Image and Tag
       env:
         REGISTRY: 585853585762.dkr.ecr.sa-east-1.amazonaws.com
