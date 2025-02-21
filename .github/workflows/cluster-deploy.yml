@@ -32,7 +32,7 @@ jobs:
      - name: Login to AWSECR
        uses: docker/login-action@v3
        with:
-         registry: 765176032689.dkr.ecr.eu-west-1.amazonaws.com
+         registry: 992382840772.dkr.ecr.eu-north-1.amazonaws.com
          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
        env:
@@ -40,7 +40,7 @@ jobs:
 
      - name: Build Image
        env:
-         REGISTRY: 765176032689.dkr.ecr.eu-west-1.amazonaws.com
+         REGISTRY: 992382840772.dkr.ecr.eu-north-1.amazonaws.com
          REPO: merchant_api
          REPOSITORY_TAG: ${REGISTRY}/${REPO}:${GITHUB_RUN_NUMBER}
         
