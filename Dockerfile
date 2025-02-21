@@ -3,10 +3,8 @@ FROM node:18.20.0 as node-build
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package.*json ./
-
-# Install dependencies
 RUN npm install
 
 # Copy the rest of the app and build it
@@ -16,10 +14,10 @@ RUN npm run build
 # Stage 2: Serve the app using NGINX
 FROM nginx:latest
 
-# Remove default NGINX website
+# Remove default NGINX website content
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy the built app from the previous stage
+# Copy the built Node.js app (from the previous stage) into NGINX's HTML directory
 COPY --from=node-build /app/build /usr/share/nginx/html
 
 # Expose port 80 for NGINX
