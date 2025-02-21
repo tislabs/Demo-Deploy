@@ -98,5 +98,3 @@ jobs:
       install_Kubectl
 
     
-
-moidfy the image to inginx image
