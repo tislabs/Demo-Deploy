@@ -1,91 +1,65 @@
-name: Deploy to EKS
+stages:
+  - login
+  - build
+  - deploy
+  - install_kubectl
+  - deploy_to_cluster
 
-on: push
+variables:
+  AWS_DEFAULT_REGION: $CI_AWS_REGION
+  CLUSTER_NAME: $CI_EKS_CLUSTER_NAME
+  ECR_REPOSITORY: $CI_ECR_REPOSITORY  # Replace with your ECR repository name
+  IMAGE_TAG: $CI_COMMIT_REF_NAME
+  AWS_ACCOUNT_ID: $CI_AWS_ACCOUNT_ID  # Set this in GitLab CI/CD variables
+  ECR_REGISTRY: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
-jobs:
-  loginToAWS:
-    runs-on: ubuntu-latest
+# Step 1: AWS Authentication and Setup
+login_to_aws:
+  stage: login
+  image: amazon/aws-cli:latest
+  script:
+    - aws sts get-caller-identity
+  only:
+    - main  # Trigger this job only for the main branch
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+# Step 2: Pull NGINX image and push to ECR
+build_and_push_to_ecr:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Logging into ECR"
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+    - echo "Pulling NGINX image from Docker Hub"
+    - docker pull nginx:latest  # Pull the official NGINX image
+    - echo "Tagging NGINX image for ECR"
+    - docker tag nginx:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - echo "Pushing NGINX image to ECR"
+    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  only:
+    - main  # Trigger this job only for the main branch
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+# Step 3: Install kubectl
+install_kubectl:
+  stage: install_kubectl
+  image: ubuntu:latest
+  before_script:
+    - apt-get update && apt-get install -y curl unzip
+  script:
+    - echo "Installing kubectl"
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+  only:
+    - main  # Trigger this job only for the main branch
 
-  buildImage-and-Push-to-ECR:
-    runs-on: ubuntu-latest
-    needs:
-      loginToAWS
-
-    steps:
-    - name: Code Checkout
-      uses: actions/checkout@v4
-
-    - name: Login to AWSECR
-      uses: docker/login-action@v3
-      with:
-        registry: 585853585762.dkr.ecr.sa-east-1.amazonaws.com
-        username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      env:
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Build and Push NGINX Image
-      env:
-        REGISTRY: 585853585762.dkr.ecr.sa-east-1.amazonaws.com
-        REPO: nginx
-        REPOSITORY_TAG: ${REGISTRY}/${REPO}:${GITHUB_RUN_NUMBER}
-      run: |
-        # Build the Docker image using the multi-stage Dockerfile
-        docker build -t nginx .
-        
-        # Tag and push the NGINX image to ECR
-        docker tag nginx:latest ${REGISTRY}/${REPO}:${GITHUB_RUN_NUMBER}
-        docker push ${REGISTRY}/${REPO}:${GITHUB_RUN_NUMBER}
-
-  install_Kubectl:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Install kubectl
-      run: |
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-
-    needs:
-      buildImage-and-Push-to-ECR
-
-  deployToCluster:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Configure kubectl
-      env:
-        KUBECONFIG: ${{ runner.temp }}/kubeconfig
-      run: |
-        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }} --kubeconfig $KUBECONFIG
-        echo "KUBECONFIG=$KUBECONFIG" >> $GITHUB_ENV
-
-    - name: Deploy to EKS
-      run: |
-        sed -i "s|image: REPOSITORY_TAG|image: 585853585762.dkr.ecr.sa-east-1.amazonaws.com/nginx:$GITHUB_RUN_NUMBER|g" ./deploy.yaml
-        kubectl apply -f ./deploy.yaml
-
-    needs:
-      install_Kubectl
+# Step 4: Configure kubectl for EKS and Deploy to the Cluster
+deploy_to_eks:
+  stage: deploy
+  image: lachlanevenson/k8s-kubectl:latest
+  script:
+    - echo "Configuring kubectl for EKS"
+    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
+    - kubectl get nodes
+   
